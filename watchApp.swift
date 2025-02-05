@@ -18,7 +18,7 @@ struct ContentView: View {
     private let longPressMinDuration: Double = 0.5
     
     func modifyLife(_ value: Int) -> Void {
-        life = max(0, life + value)
+        life = max(0, life + value) //dont go below 0
     }
         
     func startRepeatingChange(_ delta: Int) {
@@ -32,6 +32,7 @@ struct ContentView: View {
         isHolding = false
     }
     
+    // template to create buttons since code is large and changes are minimal
     func createButton(_ type: ButtonOptions) -> some View {
         let (label, value) = type == .Add ? ("+", 1) : ("-", -1)
         return Button(label) {
@@ -39,10 +40,10 @@ struct ContentView: View {
                 modifyLife(value)
             }
             
-            isHolding = false
+            isHolding = false //stop incrementing when finger leaves the touchscreen
         }
             .simultaneousGesture(LongPressGesture(minimumDuration: longPressMinDuration).onEnded { _ in
-                isHolding = true
+                isHolding = true //start the hold flag when longpress starts
                 startRepeatingChange(value * 10)
                 
             })
@@ -69,16 +70,17 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black)
             .focusable()
+            //digital crown shenanigans
             .digitalCrownRotation($crownValue, from: -100, through: 100, sensitivity: .medium, isContinuous: true, isHapticFeedbackEnabled: true)
             .onChange(of: crownValue) { newValue in
-                let newWholeVal = Int(round(newValue))
+                let newWholeVal = Int(round(newValue)) //round and cast to int seems pretty dumb but xcode was not happy
                 let difference = newWholeVal - lastWholeCrownValue
                 
-                if abs(difference) >= 1 && abs(difference) <= 4 {
+                if abs(difference) >= 1 && abs(difference) <= 4 { // track when the int changes but avoid big spikes on under/overflow
                     modifyLife(difference)
                 }
                 
-                lastWholeCrownValue = newWholeVal
+                lastWholeCrownValue = newWholeVal //store final whole number
             }
     }
 }
